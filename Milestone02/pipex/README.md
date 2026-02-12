@@ -14,7 +14,7 @@ This project is a deep dive into:
 
 ---
 
-## 🛠 Features
+## 🛠  Features
 
 The `pipex` program has the following characteristics:
 

@@ -82,9 +82,9 @@ Ensuring that:
 
 ---
 
-## 🚀 Usage
+## 🚀  Usage
 
-### 🔧 Requirements
+###  Requirements
 
 The program is written in **C** and requires:
 
