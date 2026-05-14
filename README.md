@@ -1,7 +1,9 @@
 # 42 Cursus - The Complete Journey
 
+**Timeline: May 2025 – March 2026**
+
 This repository documents my progression through the **42 Tokyo** Common Core curriculum. 
-It showcases a wide range of computer science topics, from low-level system programming and memory management to DevOps, networking, and Object-Oriented Programming. with C++.
+It showcases a wide range of computer science topics, from low-level system programming and memory management to DevOps, networking, Object-Oriented Programming with C++, and full-stack web development.
 
 ## 🚀 Projects Overview
 
@@ -22,16 +24,17 @@ It showcases a wide range of computer science topics, from low-level system prog
 | **Milestone 05** | [CPP Modules 05-09](./Milestone05/) | Advanced C++: Exceptions, Templates, and STL. | C++, Templates, STL | 
 | |[Inception](./Milestone05/inception) | System administration with Docker and virtualization. | Docker, Nginx, MariaDB |
 | | [ft_irc](./Milestone05/ft_irc) | An IRC server built from scratch using C++98. | C++, Sockets |
-| **Milestone 06** | **[Final Project Name]** | *Currently working on this final challenge.* | [Tech Stack] |
+| **Milestone 06** | **[ft_transcendence](./Milestone06/ft_transcendence)** | A real-time multiplayer Pong game featuring matchmaking, reconnection logic, and OAuth integration. | TypeScript, Vite, Tailwind CSS, WebSockets |
 
 ## 🛠 Skills & Competencies
 
-- **Languages:** C, C++ (98/11/14)
+- **Languages:** C, C++ (98/11/14), TypeScript, JavaScript
+- **Web & Real-time:** WebSockets, Vite, Tailwind CSS, OAuth, Full-stack Integration
 - **Systems:** UNIX Logic, Shell Scripting, Memory Management (Valgrind/GDB)
 - **Networking:** Socket Programming (TCP/IP), Subnetting, Protocol Implementation
 - **DevOps:** Docker, Virtualization, Network Configuration
 - **Theory:** Data Structures, Sorting Algorithms, Concurrency, OOP
-- **Soft Skills:** Peer-learning, Self-learning, Problem-solving under strict constraints
+- **Soft Skills:** Peer-learning, Self-learning, Problem-solving under strict constraints, Team Leadership
 
 ## 📖 What is 42?
 42 is a global, teacher-less coding school that focuses on peer-to-peer learning and project-based curriculum. It emphasizes self-discipline and collaborative problem-solving, requiring students to pass rigorous automated tests and peer evaluations.
