@@ -1,0 +1,191 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+
+enum GameStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED //ゲーム途中で切断された場合
+}
+
+enum MatchMode {
+  SINGLE_PLAYER
+  LOCAL_MULTIPLAYER
+  ONLINE_MULTIPLAYER
+}
+
+enum MatchStatus {
+  IN_PROGRESS
+  FINISHED
+  ABANDONED
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
+// ---------- User ----------
+
+model User {
+  id                 String    @id @default(cuid())
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  username           String    @unique
+  password           String?
+  provider           String    @default("local")
+  providerId         String?
+  avatar             String?
+  googleName         String?
+  name               String
+  email              String?   @unique
+  emailVerified      Boolean   @default(false)
+  emailVerifyToken   String?
+  emailVerifyExpires DateTime?
+  passwordResetToken   String?
+  passwordResetExpires DateTime?
+  twoFactorSecret     String?
+  twoFactorEnabled    Boolean   @default(false)
+
+  wins   Int @default(0)
+  losses Int @default(0)
+  rating Int @default(1000)
+
+  gamesAsPlayer1 Game[] @relation("Player1Games")
+  gamesAsPlayer2 Game[] @relation("Player2Games")
+  wonGames       Game[] @relation("WonGames")
+  matchPlayers   MatchPlayer[]
+
+  friendRequestsSent     Friendship[] @relation("FriendshipRequester")
+  friendRequestsReceived Friendship[] @relation("FriendshipAddressee")
+
+  conversationsAsUserA Conversation[] @relation("ConversationUserA")
+  conversationsAsUserB Conversation[] @relation("ConversationUserB")
+  messages             Message[]
+
+  apiKeys ApiKey[]
+}
+
+// ---------- Game ----------
+
+model Game {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  player1Id String?
+  player2Id String?
+  player1   User?  @relation("Player1Games", fields: [player1Id], references: [id], onDelete: SetNull)
+  player2   User?  @relation("Player2Games", fields: [player2Id], references: [id], onDelete: SetNull)
+
+  player1Score Int
+  player2Score Int
+  winnerId     String?
+  winner       User?    @relation("WonGames", fields: [winnerId], references: [id], onDelete: SetNull)
+
+  duration Int
+  isRanked Boolean    @default(true)
+  status   GameStatus @default(IN_PROGRESS)
+}
+
+model Match {
+  id        String      @id @default(cuid())
+  mode      MatchMode
+  status    MatchStatus @default(IN_PROGRESS)
+  startedAt DateTime    @default(now())
+  endedAt   DateTime?
+
+  players MatchPlayer[]
+
+  @@index([status, endedAt])
+  @@index([startedAt])
+}
+
+model MatchPlayer {
+  id       String  @id @default(cuid())
+  matchId  String
+  userId   String
+  score    Int     @default(0)
+  isWinner Boolean @default(false)
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, userId])
+  @@index([userId])
+}
+
+// ---------- Friendship ----------
+
+model Friendship {
+  id          String           @id @default(cuid())
+  requesterId String
+  addresseeId String
+  status      FriendshipStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @default(now()) @updatedAt
+
+  requester User @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee User @relation("FriendshipAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@index([requesterId, addresseeId, status])
+}
+
+// ---------- Chat ----------
+
+model Conversation {
+  id        String   @id @default(cuid())
+  userAId   String
+  userBId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  userA User @relation("ConversationUserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB User @relation("ConversationUserB", fields: [userBId], references: [id], onDelete: Cascade)
+
+  messages Message[]
+
+  @@unique([userAId, userBId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+// ---------- API Key ----------
+
+model ApiKey {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+
+  name      String                    // ユーザーが識別用に付ける名前 (例: "My Bot")
+  prefix    String                    // キーの先頭部分を平文保存 (例: "ft_abc12")
+  keyHash   String    @unique         // SHA-256ハッシュ (検索・照合用)
+  scopes    String[]  @default(["read"]) // 許可スコープ: "read", "write", "delete"
+  expiresAt DateTime?                 // 有効期限 (null = 無期限)
+  lastUsedAt DateTime?                // 最終利用日時
+  revoked   Boolean   @default(false) // 失効済みフラグ
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([keyHash])
+  @@index([userId])
+}

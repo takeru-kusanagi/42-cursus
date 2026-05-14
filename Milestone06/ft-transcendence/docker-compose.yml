@@ -1,0 +1,123 @@
+# ft_transcendence - Docker Compose (development)
+# Services: frontend (React) | backend (NestJS) | db (PostgreSQL) | nginx (reverse proxy)
+# Before first run: make setup (creates .env), or cp .env.example .env
+
+services:
+  # ---------------------------------------------------------------------------
+  # Frontend - React.js + Tailwind CSS
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ft_transcendence_frontend
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules  # prevent overwriting; remove volume when deps change
+      - ./shared:/app/shared # Both the front end and back end of the pong game needs the settings files
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - VITE_API_URL=${VITE_API_URL:-http://localhost}
+      - VITE_WS_URL=${VITE_WS_URL:-ws://localhost}
+    depends_on:
+      - backend
+    networks:
+      - app_network
+
+  # ---------------------------------------------------------------------------
+  # Backend - NestJS + Socket.io
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ft_transcendence_backend
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "${BACKEND_PORT:-4000}:4000"
+    volumes:
+      - ./backend:/app
+      - backend_node_modules:/app/node_modules  # remove volume when deps change
+      - ./shared:/app/shared # Both the front end and back end of the pong game needs the settings files
+
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=4000
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres_dev_password}@db:5432/${POSTGRES_DB:-ft_transcendence}
+      - JWT_SECRET=${JWT_SECRET:-dev_jwt_secret_min_32_chars_for_local}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      - APP_URL=${APP_URL:-http://localhost}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_network
+
+  # ---------------------------------------------------------------------------
+  # Database - PostgreSQL (replace with mysql image if needed)
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: ft_transcendence_db
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres_dev_password}
+      - POSTGRES_DB=${POSTGRES_DB:-ft_transcendence}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-ft_transcendence}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_network
+
+  # ---------------------------------------------------------------------------
+  # Reverse Proxy - Nginx (HTTPS / SSL, WAF ModSecurity)
+  # ---------------------------------------------------------------------------
+  nginx:
+    image: nginx:alpine
+    container_name: ft_transcendence_nginx
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      # For ModSecurity: - ./nginx/modsecurity:/etc/nginx/modsecurity:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app_network
+
+volumes:
+  postgres_data:
+  frontend_node_modules:
+  backend_node_modules:
+
+networks:
+  app_network:
+    driver: bridge

@@ -1,0 +1,9 @@
+.DS_Store
+.env
+*.log
+
+# SSL certificates (generate locally with mkcert)
+nginx/ssl/*.pem
+nginx/ssl/*.key
+nginx/ssl/*.crt
+node_modules/

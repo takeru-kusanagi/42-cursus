@@ -1,0 +1,101 @@
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  code-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: AI Code Review with OpenAI
+        uses: anc95/ChatGPT-CodeReview@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_ENDPOINT: https://api.openai.com/v1
+          MODEL: gpt-5.1-chat-latest # または gpt-4o-mini でコスト削減
+          PROMPT: |
+            You are an experienced code reviewer. Please review the following code changes.
+            Your review serves two purposes: (1) help human reviewers quickly understand what this change does, and (2) catch potential issues.
+            Write everything in BOTH Japanese and English.
+
+            **Format your review as follows:**
+
+            ## 📝 変更の概要 / Change Summary
+
+            ### 🇯🇵 日本語
+            この変更の目的と内容を2〜3文で簡潔に説明してください。
+            - **目的:** なぜこの変更が必要か
+            - **変更内容:** 主な変更ファイルと何を変更したか
+            - **影響範囲:** システムのどの部分に影響があるか
+
+            ### 🇬🇧 English
+            Briefly describe what this change does in 2-3 sentences.
+            - **Purpose:** Why this change was made
+            - **What changed:** Key files and what was modified
+            - **Scope of impact:** What parts of the system are affected
+
+            ---
+
+            ## 🇯🇵 コードレビュー
+
+            ### 🔴 Critical（致命的）
+            セキュリティ脆弱性、データ損失リスク、重大なバグ
+            - [指摘があれば記載、なければ "なし"]
+
+            ### 🟠 High（重要）
+            パフォーマンス問題、ロジックエラー、悪いプラクティス
+            - [指摘があれば記載、なければ "なし"]
+
+            ### 🟡 Medium（中程度）
+            コードの可読性、保守性に関する懸念
+            - [指摘があれば記載、なければ "なし"]
+
+            ### 🟢 Low（軽微）
+            軽微な改善、タイポ、スタイルの提案
+            - [指摘があれば記載、なければ "なし"]
+
+            ---
+
+            ## 🇬🇧 Code Review
+
+            ### 🔴 Critical
+            Security vulnerabilities, data loss risks, major bugs
+            - [issue if any, or "None"]
+
+            ### 🟠 High
+            Performance issues, logic errors, bad practices
+            - [issue if any, or "None"]
+
+            ### 🟡 Medium
+            Code readability, maintainability concerns
+            - [issue if any, or "None"]
+
+            ### 🟢 Low
+            Minor improvements, typos, style suggestions
+            - [issue if any, or "None"]
+
+            ---
+
+            **Review points:**
+            - Security vulnerabilities (SQL injection, XSS, authentication issues)
+            - Bugs and logic errors
+            - Performance bottlenecks
+            - Best practices violations
+            - Code readability and maintainability
+            - Error handling
+            - Test coverage concerns
+
+            Be specific and provide code examples or suggestions where applicable.
+          top_p: 1
+          MAX_PATCH_LENGTH: 12000
