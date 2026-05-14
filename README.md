@@ -24,7 +24,7 @@ It showcases a wide range of computer science topics, from low-level system prog
 | **Milestone 05** | [CPP Modules 05-09](./Milestone05/) | Advanced C++: Exceptions, Templates, and STL. | C++, Templates, STL | 
 | |[Inception](./Milestone05/inception) | System administration with Docker and virtualization. | Docker, Nginx, MariaDB |
 | | [ft_irc](./Milestone05/ft_irc) | An IRC server built from scratch using C++98. | C++, Sockets |
-| **Milestone 06** | **[ft_transcendence](./Milestone06/ft_transcendence)** | A real-time multiplayer Pong game featuring matchmaking, reconnection logic, and OAuth integration. | TypeScript, Vite, Tailwind CSS, WebSockets |
+| **Milestone 06** | **[ft_transcendence](./Milestone06/ft-transcendence)** | A real-time multiplayer Pong game featuring matchmaking, reconnection logic, and OAuth integration. | TypeScript, Vite, Tailwind CSS, WebSockets |
 
 ## 🛠 Skills & Competencies
 
